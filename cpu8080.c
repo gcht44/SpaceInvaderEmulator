@@ -31,7 +31,7 @@ void check_condition_bits(CPU *cpu, bool s, bool z, bool p, bool c, uint16_t dat
     if (c)
         cpu->cy = ((data & 0xFF) > 0xFF);
     if (s)
-        cpu->s = ((data & 0x80) >> 7);
+        cpu->s = ((data & 0x80) != 0);
     if (p)
     {
         int nb_bits_set_to_one = 0;
@@ -59,6 +59,8 @@ int execute(CPU *cpu)
     print_opcode(cpu);
     uint8_t opcode = read_memory(cpu, cpu->pc++);
 
+    uint8_t hi;
+    uint8_t lo;
     uint16_t res_16bits;
     uint32_t res_32bits;
     uint16_t addr;
@@ -98,9 +100,8 @@ int execute(CPU *cpu)
             cpu->b = read_memory(cpu, addr);
             return 7;
         case 0x07: // RLC
-            new_carry = (cpu->a & 0x80) >> 7;
-            cpu->a = (cpu->a << 1) | cpu->cy;
-            cpu->cy = new_carry;
+            cpu->cy = (cpu->a & 0x80) >> 7;
+            cpu->a <<= 1;
             return 4;
         case 0x08: // NOP
             return 4;
@@ -112,7 +113,7 @@ int execute(CPU *cpu)
             return 10;
         case 0x0A: // LDAX B
             cpu->a = read_memory(cpu, ((cpu->b << 8) | cpu->c));
-            break;
+            return 7;
         case 0x0B: // DCX B
             cpu->c--;
             if (cpu->c == 0xFF)
@@ -133,149 +134,257 @@ int execute(CPU *cpu)
             cpu->c = (uint8_t)(res_16bits & 0xFF);
             return 5;
         case 0x0E: // MVI C, d8
-            // TODO: implémentation
-            break;
+            addr = read_memory(cpu, cpu->pc++);
+            cpu->c = read_memory(cpu, addr);
+            return 7;
         case 0x0F: // RRC
-            // TODO: implémentation
-            break;
+            cpu->cy = (cpu->a & 0x1);
+            cpu->a >>= 1;
+            return 4;
         case 0x10: // NOP
             return 4;
         case 0x11: // LXI D, d16
-            // TODO: implémentation
-            break;
+            cpu->e = read_memory(cpu, cpu->pc++);
+            cpu->d = read_memory(cpu, cpu->pc++);
+            return 10;
         case 0x12: // STAX D
-            // TODO: implémentation
-            break;
+            write_memory(cpu, ((cpu->d << 8) | cpu->e), cpu->a);
+            return 7;
         case 0x13: // INX D
-            // TODO: implémentation
-            break;
+            cpu->e++;
+            if (cpu->e == 0)
+                cpu->d++;
+            return 5;
         case 0x14: // INR D
-            // TODO: implémentation
-            break;
+            res_16bits = cpu->d + 1;
+            // for Auxiliary carry
+            cpu->ac = (((cpu->d & 0xF) + 1) > 0xF);
+            check_condition_bits(cpu, 1, 1, 1, 0, res_16bits);
+            cpu->d = (uint8_t)(res_16bits & 0xFF);
+            return 5;
         case 0x15: // DCR D
-            // TODO: implémentation
-            break;
+            res_16bits = cpu->d - 1;
+            // for Auxiliary carry
+            cpu->ac = (((cpu->d & 0xF) - 1) > 0xF);
+            check_condition_bits(cpu, 1, 1, 1, 0, res_16bits);
+            cpu->d = (uint8_t)(res_16bits & 0xFF);
+            return 5;
         case 0x16: // MVI D, d8
-            // TODO: implémentation
-            break;
+            addr = read_memory(cpu, cpu->pc++);
+            cpu->d = read_memory(cpu, addr);
+            return 7;
         case 0x17: // RAL
-            // TODO: implémentation
-            break;
+            new_carry = ((cpu->a & 0x80) == 0x80);
+            cpu->a = ((cpu->a << 1) | cpu->cy);
+            cpu->cy = new_carry;
+            return 4;
         case 0x18: // NOP
             return 4;
         case 0x19: // DAD D
-            // TODO: implémentation
-            break;
+            res_32bits = ((cpu->d << 8) | cpu->e) + ((cpu->h << 8) | cpu->l);
+            cpu->cy = ((res_32bits & 0xFFFF) > 0xFFFF); // Carry for 32 bits
+            cpu->h = (uint8_t)((res_32bits & 0xFF00) >> 8);
+            cpu->l = (uint8_t)(res_32bits & 0x00FF);
+            return 10;
         case 0x1A: // LDAX D
-            // TODO: implémentation
-            break;
+            cpu->a = read_memory(cpu, ((cpu->d << 8) | cpu->e));
+            return 7;
         case 0x1B: // DCX D
-            // TODO: implémentation
-            break;
+            cpu->e--;
+            if (cpu->e == 0xFF)
+                cpu->d--;
+            return 5;
         case 0x1C: // INR E
-            // TODO: implémentation
-            break;
+            res_16bits = cpu->e + 1;
+            // for Auxiliary carry
+            cpu->ac = (((cpu->e & 0xF) + 1) > 0xF);
+            check_condition_bits(cpu, 1, 1, 1, 0, res_16bits);
+            cpu->e = (uint8_t)(res_16bits & 0xFF);
+            return 5;
         case 0x1D: // DCR E
-            // TODO: implémentation
-            break;
+            res_16bits = cpu->e - 1;
+            // for Auxiliary carry
+            cpu->ac = (((cpu->e & 0xF) - 1) > 0xF);
+            check_condition_bits(cpu, 1, 1, 1, 0, res_16bits);
+            cpu->e = (uint8_t)(res_16bits & 0xFF);
+            return 5;
         case 0x1E: // MVI E, d8
-            // TODO: implémentation
-            break;
+            addr = read_memory(cpu, cpu->pc++);
+            cpu->e = read_memory(cpu, addr);
+            return 7;
         case 0x1F: // RAR
-            // TODO: implémentation
-            break;
+            new_carry = (cpu->a & 0x1);
+            cpu->a = ((cpu->a >> 1) | (cpu->cy << 7));
+            cpu->cy = new_carry;
+            return 4;
         case 0x20: // NOP
             return 4;
         case 0x21: // LXI H, d16
-            // TODO: implémentation
-            break;
+            cpu->l = read_memory(cpu, cpu->pc++);
+            cpu->h = read_memory(cpu, cpu->pc++);
+            return 10;
         case 0x22: // SHLD a16
-            // TODO: implémentation
-            break;
+            lo = read_memory(cpu, cpu->pc++);
+            hi = read_memory(cpu, cpu->pc++);
+            addr = ((hi << 8) | lo);
+            write_memory(cpu, addr, cpu->l);
+            write_memory(cpu, addr+1, cpu->h);
+            return 16;
         case 0x23: // INX H
-            // TODO: implémentation
-            break;
+            cpu->l++;
+            if (cpu->l == 0)
+                cpu->h++;
+            return 5;
         case 0x24: // INR H
-            // TODO: implémentation
-            break;
+            res_16bits = cpu->h + 1;
+            // for Auxiliary carry
+            cpu->ac = (((cpu->h & 0xF) + 1) > 0xF);
+            check_condition_bits(cpu, 1, 1, 1, 0, res_16bits);
+            cpu->h = (uint8_t)(res_16bits & 0xFF);
+            return 5;
         case 0x25: // DCR H
-            // TODO: implémentation
-            break;
+            res_16bits = cpu->h - 1;
+            // for Auxiliary carry
+            cpu->ac = (((cpu->h & 0xF) - 1) > 0xF);
+            check_condition_bits(cpu, 1, 1, 1, 0, res_16bits);
+            cpu->h = (uint8_t)(res_16bits & 0xFF);
+            return 5;
         case 0x26: // MVI H, d8
-            // TODO: implémentation
-            break;
-        case 0x27: // DAA
-            // TODO: implémentation
-            break;
+            addr = read_memory(cpu, cpu->pc++);
+            cpu->h = read_memory(cpu, addr);
+            return 7;
+        case 0x27:; // DAA
+            uint8_t add6 = (((cpu->a & 0x0F) > 9) || cpu->ac);
+            uint8_t add60 = ((cpu->a > 0x99) || cpu->cy);
+
+            if (add6)
+            {
+                cpu->ac = (((cpu->a & 0x0F) + 0x06) > 0x0F);
+                cpu->a += 0x06;
+            }
+            if (add60)
+            {
+                cpu->a += 0x60;
+                cpu->cy = 1;
+            }
+            check_condition_bits(cpu, 1, 1, 1, 0, cpu->a);
+            return 4;
         case 0x28: // NOP
             return 4;
         case 0x29: // DAD H
-            // TODO: implémentation
-            break;
+            res_32bits = (((cpu->h << 8) | cpu->l) << 1);
+            cpu->cy = ((res_32bits & 0xFFFF) > 0xFFFF); // Carry for 32 bits
+            cpu->h = (uint8_t)((res_32bits & 0xFF00) >> 8);
+            cpu->l = (uint8_t)(res_32bits & 0x00FF);
+            return 10;
         case 0x2A: // LHLD a16
-            // TODO: implémentation
-            break;
+            lo = read_memory(cpu, cpu->pc++);
+            hi = read_memory(cpu, cpu->pc++);
+            addr = ((hi << 8) | lo);
+            cpu->l = read_memory(cpu, addr);
+            cpu->h = read_memory(cpu, addr+1);
+            return 16;
         case 0x2B: // DCX H
-            // TODO: implémentation
-            break;
+            cpu->l--;
+            if (cpu->l == 0xFF)
+                cpu->h--;
+            return 5;
         case 0x2C: // INR L
-            // TODO: implémentation
-            break;
+            res_16bits = cpu->l + 1;
+            // for Auxiliary carry
+            cpu->ac = (((cpu->l & 0xF) + 1) > 0xF);
+            check_condition_bits(cpu, 1, 1, 1, 0, res_16bits);
+            cpu->l = (uint8_t)(res_16bits & 0xFF);
+            return 5;
         case 0x2D: // DCR L
-            // TODO: implémentation
-            break;
+            res_16bits = cpu->l - 1;
+            // for Auxiliary carry
+            cpu->ac = (((cpu->l & 0xF) - 1) > 0xF);
+            check_condition_bits(cpu, 1, 1, 1, 0, res_16bits);
+            cpu->l = (uint8_t)(res_16bits & 0xFF);
+            return 5;
         case 0x2E: // MVI L, d8
-            // TODO: implémentation
-            break;
+            addr = read_memory(cpu, cpu->pc++);
+            cpu->l = read_memory(cpu, addr);
+            return 7;
         case 0x2F: // CMA
-            // TODO: implémentation
-            break;
+            cpu->a ^= 0xFF;
+            return 4;
         case 0x30: // NOP
             return 4;
         case 0x31: // LXI SP, d16
-            // TODO: implémentation
-            break;
+            lo = read_memory(cpu, cpu->pc++);
+            hi = read_memory(cpu, cpu->pc++);
+            cpu->sp = (uint16_t)((hi << 8) | lo);
+            return 10;
         case 0x32: // STA a16
-            // TODO: implémentation
-            break;
+            lo = read_memory(cpu, cpu->pc++);
+            hi = read_memory(cpu, cpu->pc++);
+            addr = ((hi << 8) | lo);
+            write_memory(cpu, addr, cpu->a);
+            return 13;
         case 0x33: // INX SP
-            // TODO: implémentation
-            break;
+            cpu->sp++;
+            return 5;
         case 0x34: // INR M
-            // TODO: implémentation
-            break;
+            res_16bits = read_memory(cpu, ((cpu->h << 8) | cpu->l)) + 1;
+            // for Auxiliary carry
+            cpu->ac = (((read_memory(cpu, ((cpu->h << 8) | cpu->l)) & 0xF) + 1) > 0xF);
+            check_condition_bits(cpu, 1, 1, 1, 0, res_16bits);
+            write_memory(cpu, ((cpu->h << 8) | cpu->l), (uint8_t)(res_16bits & 0xFF));
+            return 10;
         case 0x35: // DCR M
-            // TODO: implémentation
-            break;
+            res_16bits = read_memory(cpu, ((cpu->h << 8) | cpu->l)) - 1;
+            // for Auxiliary carry
+            cpu->ac = (((read_memory(cpu, ((cpu->h << 8) | cpu->l)) & 0xF) - 1) > 0xF);
+            check_condition_bits(cpu, 1, 1, 1, 0, res_16bits);
+            write_memory(cpu, ((cpu->h << 8) | cpu->l), (uint8_t)(res_16bits & 0xFF));
+            return 10;
         case 0x36: // MVI M, d8
-            // TODO: implémentation
-            break;
+            addr = (cpu->h << 8) | cpu->l;
+            write_memory(cpu, addr, read_memory(cpu, cpu->pc++));
+            return 10;
         case 0x37: // STC
-            // TODO: implémentation
-            break;
+            cpu->cy = 1;
+            return 4;
         case 0x38: // NOP
             return 4;
         case 0x39: // DAD SP
-            // TODO: implémentation
-            break;
+            res_32bits = (cpu->sp + ((cpu->h << 8) | cpu->l));
+            cpu->cy = ((res_32bits & 0xFFFF) > 0xFFFF); // Carry for 32 bits
+            cpu->h = (uint8_t)((res_32bits & 0xFF00) >> 8);
+            cpu->l = (uint8_t)(res_32bits & 0x00FF);
+            return 10;
         case 0x3A: // LDA a16
-            // TODO: implémentation
-            break;
+            lo = read_memory(cpu, cpu->pc++);
+            hi = read_memory(cpu, cpu->pc++);
+            addr = ((hi << 8) | lo);
+            cpu->a = read_memory(cpu, addr);
+            return 13;
         case 0x3B: // DCX SP
-            // TODO: implémentation
-            break;
+            cpu->sp--;
+            return 5;
         case 0x3C: // INR A
-            // TODO: implémentation
-            break;
+            res_16bits = cpu->a + 1;
+            // for Auxiliary carry
+            cpu->ac = (((cpu->a & 0xF) + 1) > 0xF);
+            check_condition_bits(cpu, 1, 1, 1, 0, res_16bits);
+            cpu->a = (uint8_t)(res_16bits & 0xFF);
+            return 5;
         case 0x3D: // DCR A
-            // TODO: implémentation
-            break;
+            res_16bits = cpu->a - 1;
+            // for Auxiliary carry
+            cpu->ac = (((cpu->a & 0xF) - 1) > 0xF);
+            check_condition_bits(cpu, 1, 1, 1, 0, res_16bits);
+            cpu->a = (uint8_t)(res_16bits & 0xFF);
+            return 5;
         case 0x3E: // MVI A, d8
-            // TODO: implémentation
-            break;
+            addr = read_memory(cpu, cpu->pc++);
+            cpu->a = read_memory(cpu, addr);
+            return 7;
         case 0x3F: // CMC
-            // TODO: implémentation
-            break;
+            cpu->cy ^= 1;
+            return 4;
         case 0x40: // MOV B, B
             // TODO: implémentation
             break;
