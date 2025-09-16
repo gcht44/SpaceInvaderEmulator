@@ -26,6 +26,7 @@ typedef struct CPU
     char memory[0x2000];
 
     bool halted;
+    bool interrupt_enable;
 } CPU;
 
 void init_cpu(CPU *cpu);

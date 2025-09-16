@@ -1,6 +1,8 @@
 #include "includes/cpu8080.h"
 #include "includes/utils.h"
-#include "memory.h"
+#include "includes/memory.h"
+#include "includes/io.h"
+
 #include <stdio.h>
 
 void init_cpu(CPU *cpu)
@@ -21,6 +23,9 @@ void init_cpu(CPU *cpu)
     cpu->ac = 0;
     cpu->p = 0;
     cpu->s = 0;
+
+    cpu->halted = false;
+    cpu->interrupt_enable = false;
 }
 
 // Gérer le flag ac indépendament dans l'instruction
@@ -43,6 +48,11 @@ void check_condition_bits(CPU *cpu, bool s, bool z, bool p, bool c, uint16_t dat
         }
         cpu->p = ((nb_bits_set_to_one % 2) == 0);
     }
+}
+
+uint8_t get_f_flags(CPU *cpu)
+{
+    return (cpu->s << 7) | (cpu->z << 6) | (cpu->ac << 4) | (cpu->p << 2) | (1 << 1) | (cpu->cy);
 }
 
 void print_opcode(CPU *cpu)
@@ -548,8 +558,8 @@ int execute(CPU *cpu)
             write_memory(cpu, ((cpu->h << 8) | cpu->l), cpu->l);
             return 7;
         case 0x76: // HLT
-            // TODO: implémentation
-            break;
+            cpu->halted = true;
+            return 7;
         case 0x77: // MOV M, A
             write_memory(cpu, ((cpu->h << 8) | cpu->l), cpu->a);
             return 7;
@@ -774,288 +784,608 @@ int execute(CPU *cpu)
             cpu->a = (uint8_t)(res_16bits & 0xFF);
             return 4;
         case 0xA0: // ANA B
-            // TODO: implémentation
-            break;
+            res_16bits = cpu->a & cpu->b;
+            cpu->ac = 1;
+            check_condition_bits(cpu, 1, 1, 1, 1, res_16bits);
+            cpu->a = (uint8_t)(res_16bits & 0xFF);
+            return 4;
         case 0xA1: // ANA C
-            // TODO: implémentation
-            break;
+            res_16bits = cpu->a & cpu->c;
+            cpu->ac = 1;
+            check_condition_bits(cpu, 1, 1, 1, 1, res_16bits);
+            cpu->a = (uint8_t)(res_16bits & 0xFF);
+            return 4;
         case 0xA2: // ANA D
-            // TODO: implémentation
-            break;
+            res_16bits = cpu->a & cpu->d;
+            cpu->ac = 1;
+            check_condition_bits(cpu, 1, 1, 1, 1, res_16bits);
+            cpu->a = (uint8_t)(res_16bits & 0xFF);
+            return 4;
         case 0xA3: // ANA E
-            // TODO: implémentation
-            break;
+            res_16bits = cpu->a & cpu->e;
+            cpu->ac = 1;
+            check_condition_bits(cpu, 1, 1, 1, 1, res_16bits);
+            cpu->a = (uint8_t)(res_16bits & 0xFF);
+            return 4;
         case 0xA4: // ANA H
-            // TODO: implémentation
-            break;
+            res_16bits = cpu->a & cpu->h;
+            cpu->ac = 1;
+            check_condition_bits(cpu, 1, 1, 1, 1, res_16bits);
+            cpu->a = (uint8_t)(res_16bits & 0xFF);
+            return 4;
         case 0xA5: // ANA L
-            // TODO: implémentation
-            break;
+            res_16bits = cpu->a & cpu->l;
+            cpu->ac = 1;
+            check_condition_bits(cpu, 1, 1, 1, 1, res_16bits);
+            cpu->a = (uint8_t)(res_16bits & 0xFF);
+            return 4;
         case 0xA6: // ANA M
-            // TODO: implémentation
-            break;
+            lo = read_memory(cpu, ((cpu->h << 8) | cpu->l));
+            res_16bits = cpu->a & lo;
+            cpu->ac = 1;
+            check_condition_bits(cpu, 1, 1, 1, 1, res_16bits);
+            cpu->a = (uint8_t)(res_16bits & 0xFF);
+            return 7;
         case 0xA7: // ANA A
-            // TODO: implémentation
-            break;
+            res_16bits = cpu->a & cpu->a;
+            cpu->ac = 1;
+            check_condition_bits(cpu, 1, 1, 1, 1, res_16bits);
+            cpu->a = (uint8_t)(res_16bits & 0xFF);
+            return 4;
         case 0xA8: // XRA B
-            // TODO: implémentation
-            break;
+            res_16bits = cpu->a ^ cpu->b;
+            cpu->ac = 0;
+            cpu->cy = 0;
+            check_condition_bits(cpu, 1, 1, 1, 0, res_16bits);
+            cpu->a = (uint8_t)(res_16bits & 0xFF);
+            return 4;
         case 0xA9: // XRA C
-            // TODO: implémentation
-            break;
+            res_16bits = cpu->a ^ cpu->c;
+            cpu->ac = 0;
+            cpu->cy = 0;
+            check_condition_bits(cpu, 1, 1, 1, 0, res_16bits);
+            cpu->a = (uint8_t)(res_16bits & 0xFF);
+            return 4;
         case 0xAA: // XRA D
-            // TODO: implémentation
-            break;
+            res_16bits = cpu->a ^ cpu->d;
+            cpu->ac = 0;
+            cpu->cy = 0;
+            check_condition_bits(cpu, 1, 1, 1, 0, res_16bits);
+            cpu->a = (uint8_t)(res_16bits & 0xFF);
+            return 4;
         case 0xAB: // XRA E
-            // TODO: implémentation
-            break;
+            res_16bits = cpu->a ^ cpu->e;
+            cpu->ac = 0;
+            cpu->cy = 0;
+            check_condition_bits(cpu, 1, 1, 1, 0, res_16bits);
+            cpu->a = (uint8_t)(res_16bits & 0xFF);
+            return 4;
         case 0xAC: // XRA H
-            // TODO: implémentation
-            break;
+            res_16bits = cpu->a ^ cpu->h;
+            cpu->ac = 0;
+            cpu->cy = 0;
+            check_condition_bits(cpu, 1, 1, 1, 0, res_16bits);
+            cpu->a = (uint8_t)(res_16bits & 0xFF);
+            return 4;
         case 0xAD: // XRA L
-            // TODO: implémentation
-            break;
+            res_16bits = cpu->a ^ cpu->l;
+            cpu->ac = 0;
+            cpu->cy = 0;
+            check_condition_bits(cpu, 1, 1, 1, 0, res_16bits);
+            cpu->a = (uint8_t)(res_16bits & 0xFF);
+            return 4;
         case 0xAE: // XRA M
-            // TODO: implémentation
-            break;
+            lo = read_memory(cpu, ((cpu->h << 8) | cpu->l));
+            res_16bits = cpu->a ^ lo;
+            cpu->ac = 0;
+            cpu->cy = 0;
+            check_condition_bits(cpu, 1, 1, 1, 0, res_16bits);
+            cpu->a = (uint8_t)(res_16bits & 0xFF);
+            return 7;
         case 0xAF: // XRA A
-            // TODO: implémentation
-            break;
+            res_16bits = cpu->a ^ cpu->a;
+            cpu->ac = 0;
+            cpu->cy = 0;
+            check_condition_bits(cpu, 1, 1, 1, 0, res_16bits);
+            cpu->a = (uint8_t)(res_16bits & 0xFF);
+            return 4;
         case 0xB0: // ORA B
-            // TODO: implémentation
-            break;
+            res_16bits = cpu->a | cpu->b;
+            cpu->ac = 0;
+            cpu->cy = 0;
+            check_condition_bits(cpu, 1, 1, 1, 0, res_16bits);
+            cpu->a = (uint8_t)(res_16bits & 0xFF);
+            return 4;
         case 0xB1: // ORA C
-            // TODO: implémentation
-            break;
+            res_16bits = cpu->a | cpu->c;
+            cpu->ac = 0;
+            cpu->cy = 0;
+            check_condition_bits(cpu, 1, 1, 1, 0, res_16bits);
+            cpu->a = (uint8_t)(res_16bits & 0xFF);
+            return 4;
         case 0xB2: // ORA D
-            // TODO: implémentation
-            break;
+            res_16bits = cpu->a | cpu->d;
+            cpu->ac = 0;
+            cpu->cy = 0;
+            check_condition_bits(cpu, 1, 1, 1, 0, res_16bits);
+            cpu->a = (uint8_t)(res_16bits & 0xFF);
+            return 4;
         case 0xB3: // ORA E
-            // TODO: implémentation
-            break;
+            res_16bits = cpu->a | cpu->e;
+            cpu->ac = 0;
+            cpu->cy = 0;
+            check_condition_bits(cpu, 1, 1, 1, 0, res_16bits);
+            cpu->a = (uint8_t)(res_16bits & 0xFF);
+            return 4;
         case 0xB4: // ORA H
-            // TODO: implémentation
-            break;
+            res_16bits = cpu->a | cpu->h;
+            cpu->ac = 0;
+            cpu->cy = 0;
+            check_condition_bits(cpu, 1, 1, 1, 0, res_16bits);
+            cpu->a = (uint8_t)(res_16bits & 0xFF);
+            return 4;
         case 0xB5: // ORA L
-            // TODO: implémentation
-            break;
+            res_16bits = cpu->a | cpu->l;
+            cpu->ac = 0;
+            cpu->cy = 0;
+            check_condition_bits(cpu, 1, 1, 1, 0, res_16bits);
+            cpu->a = (uint8_t)(res_16bits & 0xFF);
+            return 4;
         case 0xB6: // ORA M
-            // TODO: implémentation
-            break;
+            lo = read_memory(cpu, ((cpu->h << 8) | cpu->l));
+            res_16bits = cpu->a | lo;
+            cpu->ac = 0;
+            cpu->cy = 0;
+            check_condition_bits(cpu, 1, 1, 1, 0, res_16bits);
+            cpu->a = (uint8_t)(res_16bits & 0xFF);
+            return 7;
         case 0xB7: // ORA A
-            // TODO: implémentation
-            break;
+            res_16bits = cpu->a | cpu->a;
+            cpu->ac = 0;
+            cpu->cy = 0;
+            check_condition_bits(cpu, 1, 1, 1, 0, res_16bits);
+            cpu->a = (uint8_t)(res_16bits & 0xFF);
+            return 4;
         case 0xB8: // CMP B
-            // TODO: implémentation
-            break;
+            res_16bits = cpu->a - cpu->b;
+            cpu->ac = (((cpu->a & 0x0F) - (cpu->b & 0x0F)) > 0x0F);
+            check_condition_bits(cpu, 1, 1, 1, 1, res_16bits);
+            return 4;
         case 0xB9: // CMP C
-            // TODO: implémentation
-            break;
+            res_16bits = cpu->a - cpu->c;
+            cpu->ac = (((cpu->a & 0x0F) - (cpu->c & 0x0F)) > 0x0F);
+            check_condition_bits(cpu, 1, 1, 1, 1, res_16bits);
+            return 4;
         case 0xBA: // CMP D
-            // TODO: implémentation
-            break;
+            res_16bits = cpu->a - cpu->d;
+            cpu->ac = (((cpu->a & 0x0F) - (cpu->d & 0x0F)) > 0x0F);
+            check_condition_bits(cpu, 1, 1, 1, 1, res_16bits);
+            return 4;
         case 0xBB: // CMP E
-            // TODO: implémentation
-            break;
+            res_16bits = cpu->a - cpu->e;
+            cpu->ac = (((cpu->a & 0x0F) - (cpu->e & 0x0F)) > 0x0F);
+            check_condition_bits(cpu, 1, 1, 1, 1, res_16bits);
+            return 4;
         case 0xBC: // CMP H
-            // TODO: implémentation
-            break;
+            res_16bits = cpu->a - cpu->h;
+            cpu->ac = (((cpu->a & 0x0F) - (cpu->h & 0x0F)) > 0x0F);
+            check_condition_bits(cpu, 1, 1, 1, 1, res_16bits);
+            return 4;
         case 0xBD: // CMP L
-            // TODO: implémentation
-            break;
+            res_16bits = cpu->a - cpu->l;
+            cpu->ac = (((cpu->a & 0x0F) - (cpu->l & 0x0F)) > 0x0F);
+            check_condition_bits(cpu, 1, 1, 1, 1, res_16bits);
+            return 4;
         case 0xBE: // CMP M
-            // TODO: implémentation
-            break;
+            lo = read_memory(cpu, ((cpu->h << 8) | cpu->l));
+            res_16bits = cpu->a - lo;
+            cpu->ac = (((cpu->a & 0x0F) - (lo & 0x0F)) > 0x0F);
+            check_condition_bits(cpu, 1, 1, 1, 1, res_16bits);
+            cpu->a = (uint8_t)(res_16bits & 0xFF);
+            return 7;
         case 0xBF: // CMP A
-            // TODO: implémentation
-            break;
+            res_16bits = cpu->a - cpu->l;
+            cpu->ac = (((cpu->a & 0x0F) - (cpu->l & 0x0F)) > 0x0F);
+            check_condition_bits(cpu, 1, 1, 1, 1, res_16bits);
+            return 4;
         case 0xC0: // RNZ
-            // TODO: implémentation
-            break;
+            if (!cpu->z)
+            {
+                ret(cpu);
+                return 11;
+            }
+            return 5;
         case 0xC1: // POP B
-            // TODO: implémentation
-            break;
+            cpu->b = read_memory(cpu, cpu->sp++);
+            return 10;
         case 0xC2: // JNZ a16
-            // TODO: implémentation
-            break;
+            if (!cpu->z)
+            {
+                lo = read_memory(cpu, cpu->pc++);
+                hi = read_memory(cpu, cpu->pc++);
+                addr = (lo + (hi << 8));
+                cpu->pc = addr;
+            }
+            return 10;
         case 0xC3: // JMP a16
-            // TODO: implémentation
-            break;
-        case 0xC4: // CNZ a16
-            // TODO: implémentation
-            break;
+            lo = read_memory(cpu, cpu->pc++);
+            hi = read_memory(cpu, cpu->pc++);
+            addr = (lo + (hi << 8));
+            cpu->pc = addr;
+            return 10;
+        case 0xC4: // CNZ
+            if (!cpu->z)
+            {
+                lo = read_memory(cpu, cpu->pc++);
+                hi = read_memory(cpu, cpu->pc++);
+                addr = (lo + (hi << 8));
+                call(cpu, addr);
+                return 17;
+            }
+            return 11;
         case 0xC5: // PUSH B
-            // TODO: implémentation
-            break;
+            write_memory(cpu, --cpu->sp, cpu->b);
+            return 11;
         case 0xC6: // ADI d8
-            // TODO: implémentation
-            break;
+            lo = read_memory(cpu, cpu->pc++);
+            res_16bits = cpu->a + lo;
+            cpu->ac = (((cpu->a & 0x0F) + (lo & 0x0F)) > 0x0F);
+            check_condition_bits(cpu, 1, 1, 1, 1, res_16bits);
+            cpu->a = (uint8_t)(res_16bits & 0xFF);
+            return 7;
         case 0xC7: // RST 0
-            // TODO: implémentation
-            break;
+            rst(cpu, 0);
+            return 11;
         case 0xC8: // RZ
-            // TODO: implémentation
-            break;
+            if (cpu->z)
+            {
+                ret(cpu);
+                return 11;
+            }
+            return 5;
         case 0xC9: // RET
-            // TODO: implémentation
-            break;
+            ret(cpu);
+            return 10;
         case 0xCA: // JZ a16
-            // TODO: implémentation
-            break;
-        case 0xCB: // NOP
-            return 4;
+            if (cpu->z)
+            {
+                lo = read_memory(cpu, cpu->pc++);
+                hi = read_memory(cpu, cpu->pc++);
+                addr = (lo + (hi << 8));
+                cpu->pc = addr;
+            }
+            return 10;
+        case 0xCB: // JMP a16
+            lo = read_memory(cpu, cpu->pc++);
+            hi = read_memory(cpu, cpu->pc++);
+            addr = (lo + (hi << 8));
+            cpu->pc = addr;
+            return 10;
         case 0xCC: // CZ a16
-            // TODO: implémentation
-            break;
+            if (cpu->z)
+            {
+                lo = read_memory(cpu, cpu->pc++);
+                hi = read_memory(cpu, cpu->pc++);
+                addr = (lo + (hi << 8));
+                call(cpu, addr);
+                return 17;
+            }
+            return 11;
         case 0xCD: // CALL a16
-            // TODO: implémentation
-            break;
+            lo = read_memory(cpu, cpu->pc++);
+            hi = read_memory(cpu, cpu->pc++);
+            addr = (lo + (hi << 8));
+            call(cpu, addr);
+            return 17;
         case 0xCE: // ACI d8
-            // TODO: implémentation
-            break;
+            lo = read_memory(cpu, cpu->pc++);
+            res_16bits = cpu->a + lo + cpu->cy;
+            cpu->ac = (((cpu->a & 0x0F) + (lo & 0x0F) + cpu->cy) > 0x0F);
+            check_condition_bits(cpu, 1, 1, 1, 1, res_16bits);
+            cpu->a = (uint8_t)(res_16bits & 0xFF);
+            return 7;
         case 0xCF: // RST 1
-            // TODO: implémentation
-            break;
+            rst(cpu, 1);
+            return 11;
         case 0xD0: // RNC
-            // TODO: implémentation
-            break;
+            if (!cpu->c)
+            {
+                ret(cpu);
+                return 11;
+            }
+            return 5;
         case 0xD1: // POP D
-            // TODO: implémentation
-            break;
+            cpu->d = read_memory(cpu, cpu->sp++);
+            return 10;
         case 0xD2: // JNC a16
-            // TODO: implémentation
-            break;
+            if (!cpu->c)
+            {
+                lo = read_memory(cpu, cpu->pc++);
+                hi = read_memory(cpu, cpu->pc++);
+                addr = (lo + (hi << 8));
+                cpu->pc = addr;
+            }
+            return 10;
         case 0xD3: // OUT d8
-            // TODO: implémentation
-            break;
+            lo = read_memory(cpu, cpu->pc++);
+            write_io(lo, cpu->a);
+            return 10;
         case 0xD4: // CNC a16
-            // TODO: implémentation
-            break;
+            if (!cpu->c)
+            {
+                lo = read_memory(cpu, cpu->pc++);
+                hi = read_memory(cpu, cpu->pc++);
+                addr = (lo + (hi << 8));
+                call(cpu, addr);
+                return 17;
+            }
+            return 11;
         case 0xD5: // PUSH D
-            // TODO: implémentation
-            break;
+            write_memory(cpu, --cpu->sp, cpu->d);
+            return 11;
         case 0xD6: // SUI d8
-            // TODO: implémentation
-            break;
+            lo = read_memory(cpu, cpu->pc++);
+            res_16bits = cpu->a - lo;
+            cpu->ac = (((cpu->a & 0x0F) - (lo & 0x0F)) > 0x0F);
+            check_condition_bits(cpu, 1, 1, 1, 1, res_16bits);
+            cpu->a = (uint8_t)(res_16bits & 0xFF);
+            return 7;
         case 0xD7: // RST 2
-            // TODO: implémentation
-            break;
+            rst(cpu, 2);
+            return 11;
         case 0xD8: // RC
-            // TODO: implémentation
-            break;
-        case 0xD9: // NOP
-            return 4;
+            if (cpu->c)
+            {
+                ret(cpu);
+                return 11;
+            }
+            return 5;
+        case 0xD9: // RET
+            ret(cpu);
+            return 10;
         case 0xDA: // JC a16
-            // TODO: implémentation
-            break;
+            if (cpu->c)
+            {
+                lo = read_memory(cpu, cpu->pc++);
+                hi = read_memory(cpu, cpu->pc++);
+                addr = (lo + (hi << 8));
+                cpu->pc = addr;
+            }
+            return 10;
         case 0xDB: // IN d8
-            // TODO: implémentation
-            break;
+            lo = read_memory(cpu, cpu->pc++);
+            cpu->a = read_io(lo);
+            return 10;
         case 0xDC: // CC a16
-            // TODO: implémentation
-            break;
-        case 0xDD: // NOP
-            return 4;
+            if (cpu->c)
+            {
+                lo = read_memory(cpu, cpu->pc++);
+                hi = read_memory(cpu, cpu->pc++);
+                addr = (lo + (hi << 8));
+                call(cpu, addr);
+                return 17;
+            }
+            return 11;
+        case 0xDD: // CALL a16
+            lo = read_memory(cpu, cpu->pc++);
+            hi = read_memory(cpu, cpu->pc++);
+            addr = (lo + (hi << 8));
+            call(cpu, addr);
+            return 17;
         case 0xDE: // SBI d8
-            // TODO: implémentation
-            break;
+            lo = read_memory(cpu, cpu->pc++);
+            res_16bits = cpu->a - (lo + cpu->cy);
+            cpu->ac = (((cpu->a & 0x0F) - ((lo & 0x0F) + cpu->cy)) > 0x0F);
+            check_condition_bits(cpu, 1, 1, 1, 1, res_16bits);
+            cpu->a = (uint8_t)(res_16bits & 0xFF);
+            return 7;
         case 0xDF: // RST 3
-            // TODO: implémentation
-            break;
+            rst(cpu, 3);
+            return 11;
         case 0xE0: // RPO
-            // TODO: implémentation
-            break;
+            if (!cpu->p)
+            {
+                ret(cpu);
+                return 11;
+            }
+            return 5;
         case 0xE1: // POP H
-            // TODO: implémentation
-            break;
+            cpu->h = read_memory(cpu, cpu->sp++);
+            return 10;
         case 0xE2: // JPO a16
-            // TODO: implémentation
-            break;
+            if (!cpu->p)
+            {
+                lo = read_memory(cpu, cpu->pc++);
+                hi = read_memory(cpu, cpu->pc++);
+                addr = (lo + (hi << 8));
+                cpu->pc = addr;
+            }
+            return 10;
         case 0xE3: // XTHL
-            // TODO: implémentation
-            break;
+            lo = read_memory(cpu, cpu->sp);
+            hi = read_memory(cpu, cpu->sp+1);
+            write_memory(cpu, cpu->sp, cpu->l);
+            write_memory(cpu, cpu->sp+1, cpu->h);
+            cpu->l = lo;
+            cpu->h = hi;
+            return 18;
         case 0xE4: // CPO a16
-            // TODO: implémentation
-            break;
+            if (!cpu->p)
+            {
+                lo = read_memory(cpu, cpu->pc++);
+                hi = read_memory(cpu, cpu->pc++);
+                addr = (lo + (hi << 8));
+                call(cpu, addr);
+                return 17;
+            }
+            return 11;
         case 0xE5: // PUSH H
-            // TODO: implémentation
-            break;
+            write_memory(cpu, --cpu->sp, cpu->h);
+            return 11;
         case 0xE6: // ANI d8
-            // TODO: implémentation
-            break;
+            lo = read_memory(cpu, cpu->pc++);
+            res_16bits = cpu->a & lo;
+            cpu->ac = 1;
+            check_condition_bits(cpu, 1, 1, 1, 1, res_16bits);
+            cpu->a = (uint8_t)(res_16bits & 0xFF);
+            return 7;
         case 0xE7: // RST 4
-            // TODO: implémentation
-            break;
+            rst(cpu, 4);
+            return 11;
         case 0xE8: // RPE
-            // TODO: implémentation
-            break;
+            if (cpu->p)
+            {
+                ret(cpu);
+                return 11;
+            }
+            return 5;
         case 0xE9: // PCHL
-            // TODO: implémentation
-            break;
+            cpu->pc = ((cpu->h << 8) | cpu->l);
+            return 5;
         case 0xEA: // JPE a16
-            // TODO: implémentation
-            break;
+            if (cpu->p)
+            {
+                lo = read_memory(cpu, cpu->pc++);
+                hi = read_memory(cpu, cpu->pc++);
+                addr = (lo + (hi << 8));
+                cpu->pc = addr;
+            }
+            return 10;
         case 0xEB: // XCHG
-            // TODO: implémentation
-            break;
+            hi = cpu->h;
+            lo = cpu->l;
+            cpu->h = cpu->d;
+            cpu->l = cpu->e;
+            cpu->d = hi;
+            cpu->e = lo;
+            return 5;
         case 0xEC: // CPE a16
-            // TODO: implémentation
-            break;
-        case 0xED: // NOP
-            return 4;
+            if (cpu->p)
+            {
+                lo = read_memory(cpu, cpu->pc++);
+                hi = read_memory(cpu, cpu->pc++);
+                addr = (lo + (hi << 8));
+                call(cpu, addr);
+                return 17;
+            }
+            return 11;
+        case 0xED: // CALL a16
+            lo = read_memory(cpu, cpu->pc++);
+            hi = read_memory(cpu, cpu->pc++);
+            addr = (lo + (hi << 8));
+            call(cpu, addr);
+            return 17;
         case 0xEE: // XRI d8
-            // TODO: implémentation
-            break;
+            lo = read_memory(cpu, cpu->pc++);
+            res_16bits = cpu->a ^ lo;
+            cpu->ac = 0;
+            cpu->cy = 0;
+            check_condition_bits(cpu, 1, 1, 1, 0, res_16bits);
+            cpu->a = (uint8_t)(res_16bits & 0xFF);
+            return 7;
         case 0xEF: // RST 5
-            // TODO: implémentation
-            break;
+            rst(cpu, 5);
+            return 11;
         case 0xF0: // RP
-            // TODO: implémentation
-            break;
+            if (!cpu->s)
+            {
+                ret(cpu);
+                return 11;
+            }
+            return 5;
         case 0xF1: // POP PSW
-            // TODO: implémentation
-            break;
+            lo = read_memory(cpu, cpu->sp++);
+            cpu->s = ((lo & 0x80) > 0);
+            cpu->z = ((lo & 0x40) > 0);
+            cpu->ac = ((lo & 0x10) > 0);
+            cpu->p = ((lo & 0x04) > 0);
+            cpu->cy = ((lo & 0x02) > 0);
+            cpu->a = read_memory(cpu, cpu->sp++);
+            return 10;
         case 0xF2: // JP a16
-            // TODO: implémentation
-            break;
+            if (!cpu->s)
+            {
+                lo = read_memory(cpu, cpu->pc++);
+                hi = read_memory(cpu, cpu->pc++);
+                addr = (lo + (hi << 8));
+                cpu->pc = addr;
+            }
+            return 10;
         case 0xF3: // DI
-            // TODO: implémentation
-            break;
-        case 0xF4: // CP a16
-            // TODO: implémentation
-            break;
-        case 0xF5: // PUSH PSW
-            // TODO: implémentation
-            break;
-        case 0xF6: // ORI d8
-            // TODO: implémentation
-            break;
-        case 0xF7: // RST 6
-            // TODO: implémentation
-            break;
-        case 0xF8: // RM
-            // TODO: implémentation
-            break;
-        case 0xF9: // SPHL
-            // TODO: implémentation
-            break;
-        case 0xFA: // JM a16
-            // TODO: implémentation
-            break;
-        case 0xFB: // EI
-            // TODO: implémentation
-            break;
-        case 0xFC: // CM a16
-            // TODO: implémentation
-            break;
-        case 0xFD: // NOP
+            cpu->interrupt_enable = false;
             return 4;
+        case 0xF4: // CP a16
+            if (!cpu->s)
+            {
+                lo = read_memory(cpu, cpu->pc++);
+                hi = read_memory(cpu, cpu->pc++);
+                addr = (lo + (hi << 8));
+                call(cpu, addr);
+                return 17;
+            }
+            return 11;
+        case 0xF5: // PUSH PSW
+            write_memory(cpu, --cpu->sp, get_f_flags(cpu));
+            write_memory(cpu, --cpu->sp, cpu->a);
+            return 11;
+        case 0xF6: // ORI d8
+            lo = read_memory(cpu, cpu->pc++);
+            res_16bits = cpu->a | lo;
+            cpu->ac = 0;
+            cpu->cy = 0;
+            check_condition_bits(cpu, 1, 1, 1, 0, res_16bits);
+            cpu->a = (uint8_t)(res_16bits & 0xFF);
+            return 7;
+        case 0xF7: // RST 6
+            rst(cpu, 6);
+            return 11;
+        case 0xF8: // RM
+            if (cpu->s)
+            {
+                ret(cpu);
+                return 11;
+            }
+            return 5;
+        case 0xF9: // SPHL
+            cpu->sp = ((cpu->h << 8) | cpu->l);
+            return 5;
+        case 0xFA: // JM a16
+            if (cpu->s)
+            {
+                lo = read_memory(cpu, cpu->pc++);
+                hi = read_memory(cpu, cpu->pc++);
+                addr = (lo + (hi << 8));
+                cpu->pc = addr;
+            }
+            return 10;
+        case 0xFB: // EI
+            cpu->interrupt_enable = true;
+            return 4;
+        case 0xFC: // CM a16
+            if (cpu->s)
+            {
+                lo = read_memory(cpu, cpu->pc++);
+                hi = read_memory(cpu, cpu->pc++);
+                addr = (lo + (hi << 8));
+                call(cpu, addr);
+                return 17;
+            }
+            return 11;
+        case 0xFD: // CALL a16
+            lo = read_memory(cpu, cpu->pc++);
+            hi = read_memory(cpu, cpu->pc++);
+            addr = (lo + (hi << 8));
+            call(cpu, addr);
+            return 17;
         case 0xFE: // CPI d8
-            // TODO: implémentation
-            break;
+            lo = read_memory(cpu, cpu->pc++);
+            res_16bits = cpu->a - lo;
+            cpu->ac = (((cpu->a & 0x0F) - (lo & 0x0F)) > 0x0F);
+            check_condition_bits(cpu, 1, 1, 1, 1, res_16bits);
+            return 4;
         case 0xFF: // RST 7
-            // TODO: implémentation
-            break;
+            rst(cpu, 7);
+            return 11;
         default:
             printf("Opcode inconnu: 0x%02X\n", opcode);
             return -1;
@@ -1063,7 +1393,23 @@ int execute(CPU *cpu)
     return 0;
 }
 
-void lxi()
+void call(CPU *cpu, uint16_t addr)
 {
+    write_memory(cpu, --cpu->sp, ((cpu->pc >> 8) & 0xFF));
+    write_memory(cpu, --cpu->sp, (cpu->pc & 0xFF));
+    cpu->pc = addr;
+}
 
+void rst(CPU *cpu, uint8_t i)
+{
+    uint16_t addr = 8 * i;
+    call(cpu, addr);
+}
+
+void ret(CPU *cpu)
+{
+    uint8_t lo = read_memory(cpu, cpu->sp++);
+    uint8_t hi = read_memory(cpu, cpu->sp++);
+    uint16_t addr = (lo + (hi << 8));
+    cpu->pc = addr;
 }
