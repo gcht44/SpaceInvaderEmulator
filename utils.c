@@ -1,6 +1,7 @@
 #include "utils.h"
+#include <stdio.h>
 
-const char* opcode_name(uint8_t opcode)
+char *opcode_name(uint8_t opcode)
 {
     switch (opcode)
     {

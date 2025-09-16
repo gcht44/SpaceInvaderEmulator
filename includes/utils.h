@@ -3,6 +3,6 @@
 
 #include <stdint.h>
 
-const char* opcode_name(uint8_t opcode);
+char *opcode_name(uint8_t opcode);
 
 #endif
