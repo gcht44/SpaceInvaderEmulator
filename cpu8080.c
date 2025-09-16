@@ -578,101 +578,201 @@ int execute(CPU *cpu)
             cpu->a = cpu->a;
             return 5;
         case 0x80: // ADD B
-            // TODO: implémentation
-            break;
+            res_16bits = cpu->a + cpu->b;
+            cpu->ac = (((cpu->a & 0x0F) + (cpu->b & 0x0F)) > 0x0F);
+            check_condition_bits(cpu, 1, 1, 1, 1, res_16bits);
+            cpu->a = (uint8_t)(res_16bits & 0xFF);
+            return 4;
         case 0x81: // ADD C
-            // TODO: implémentation
-            break;
+            res_16bits = cpu->a + cpu->c;
+            cpu->ac = (((cpu->a & 0x0F) + (cpu->c & 0x0F)) > 0x0F);
+            check_condition_bits(cpu, 1, 1, 1, 1, res_16bits);
+            cpu->a = (uint8_t)(res_16bits & 0xFF);
+            return 4;
         case 0x82: // ADD D
-            // TODO: implémentation
-            break;
+            res_16bits = cpu->a + cpu->d;
+            cpu->ac = (((cpu->a & 0x0F) + (cpu->d & 0x0F)) > 0x0F);
+            check_condition_bits(cpu, 1, 1, 1, 1, res_16bits);
+            cpu->a = (uint8_t)(res_16bits & 0xFF);
+            return 4;
         case 0x83: // ADD E
-            // TODO: implémentation
-            break;
+            res_16bits = cpu->a + cpu->e;
+            cpu->ac = (((cpu->a & 0x0F) + (cpu->e & 0x0F)) > 0x0F);
+            check_condition_bits(cpu, 1, 1, 1, 1, res_16bits);
+            cpu->a = (uint8_t)(res_16bits & 0xFF);
+            return 4;
         case 0x84: // ADD H
-            // TODO: implémentation
-            break;
+            res_16bits = cpu->a + cpu->h;
+            cpu->ac = (((cpu->a & 0x0F) + (cpu->h & 0x0F)) > 0x0F);
+            check_condition_bits(cpu, 1, 1, 1, 1, res_16bits);
+            cpu->a = (uint8_t)(res_16bits & 0xFF);
+            return 4;
         case 0x85: // ADD L
-            // TODO: implémentation
-            break;
+            res_16bits = cpu->a + cpu->l;
+            cpu->ac = (((cpu->a & 0x0F) + (cpu->l & 0x0F)) > 0x0F);
+            check_condition_bits(cpu, 1, 1, 1, 1, res_16bits);
+            cpu->a = (uint8_t)(res_16bits & 0xFF);
+            return 4;
         case 0x86: // ADD M
-            // TODO: implémentation
-            break;
+            lo = read_memory(cpu, ((cpu->h << 8) | cpu->l));
+            res_16bits = cpu->a + lo;
+            cpu->ac = (((cpu->a & 0x0F) + (lo & 0x0F)) > 0x0F);
+            check_condition_bits(cpu, 1, 1, 1, 1, res_16bits);
+            cpu->a = (uint8_t)(res_16bits & 0xFF);
+            return 7;
         case 0x87: // ADD A
-            // TODO: implémentation
-            break;
+            res_16bits = cpu->a + cpu->a;
+            cpu->ac = (((cpu->a & 0x0F) + (cpu->l & 0x0F)) > 0x0F);
+            check_condition_bits(cpu, 1, 1, 1, 1, res_16bits);
+            cpu->a = (uint8_t)(res_16bits & 0xFF);
+            return 4;
         case 0x88: // ADC B
-            // TODO: implémentation
-            break;
+            res_16bits = cpu->a + cpu->b + cpu->cy;
+            cpu->ac = (((cpu->a & 0x0F) + (cpu->b & 0x0F) + cpu->cy) > 0x0F);
+            check_condition_bits(cpu, 1, 1, 1, 1, res_16bits);
+            cpu->a = (uint8_t)(res_16bits & 0xFF);
+            return 4;
         case 0x89: // ADC C
-            // TODO: implémentation
-            break;
+            res_16bits = cpu->a + cpu->c + cpu->cy;
+            cpu->ac = (((cpu->a & 0x0F) + (cpu->c & 0x0F) + cpu->cy) > 0x0F);
+            check_condition_bits(cpu, 1, 1, 1, 1, res_16bits);
+            cpu->a = (uint8_t)(res_16bits & 0xFF);
+            return 4;
         case 0x8A: // ADC D
-            // TODO: implémentation
-            break;
+            res_16bits = cpu->a + cpu->d + cpu->cy;
+            cpu->ac = (((cpu->a & 0x0F) + (cpu->d & 0x0F) + cpu->cy) > 0x0F);
+            check_condition_bits(cpu, 1, 1, 1, 1, res_16bits);
+            cpu->a = (uint8_t)(res_16bits & 0xFF);
+            return 4;
         case 0x8B: // ADC E
-            // TODO: implémentation
-            break;
+            res_16bits = cpu->a + cpu->e + cpu->cy;
+            cpu->ac = (((cpu->a & 0x0F) + (cpu->e & 0x0F) + cpu->cy) > 0x0F);
+            check_condition_bits(cpu, 1, 1, 1, 1, res_16bits);
+            cpu->a = (uint8_t)(res_16bits & 0xFF);
+            return 4;
         case 0x8C: // ADC H
-            // TODO: implémentation
-            break;
+            res_16bits = cpu->a + cpu->h + cpu->cy;
+            cpu->ac = (((cpu->a & 0x0F) + (cpu->h & 0x0F) + cpu->cy) > 0x0F);
+            check_condition_bits(cpu, 1, 1, 1, 1, res_16bits);
+            cpu->a = (uint8_t)(res_16bits & 0xFF);
+            return 4;
         case 0x8D: // ADC L
-            // TODO: implémentation
-            break;
+            res_16bits = cpu->a + cpu->l + cpu->cy;
+            cpu->ac = (((cpu->a & 0x0F) + (cpu->l & 0x0F) + cpu->cy) > 0x0F);
+            check_condition_bits(cpu, 1, 1, 1, 1, res_16bits);
+            cpu->a = (uint8_t)(res_16bits & 0xFF);
+            return 4;
         case 0x8E: // ADC M
-            // TODO: implémentation
-            break;
+            lo = read_memory(cpu, ((cpu->h << 8) | cpu->l));
+            res_16bits = cpu->a + lo + cpu->cy;
+            cpu->ac = (((cpu->a & 0x0F) + (lo & 0x0F) + cpu->cy) > 0x0F);
+            check_condition_bits(cpu, 1, 1, 1, 1, res_16bits);
+            cpu->a = (uint8_t)(res_16bits & 0xFF);
+            return 7;
         case 0x8F: // ADC A
-            // TODO: implémentation
-            break;
+            res_16bits = cpu->a + cpu->a + cpu->cy;
+            cpu->ac = (((cpu->a & 0x0F) + (cpu->a & 0x0F) + cpu->cy) > 0x0F);
+            check_condition_bits(cpu, 1, 1, 1, 1, res_16bits);
+            cpu->a = (uint8_t)(res_16bits & 0xFF);
+            return 4;
         case 0x90: // SUB B
-            // TODO: implémentation
-            break;
+            res_16bits = cpu->a - cpu->b;
+            cpu->ac = (((cpu->a & 0x0F) - (cpu->b & 0x0F)) > 0x0F);
+            check_condition_bits(cpu, 1, 1, 1, 1, res_16bits);
+            cpu->a = (uint8_t)(res_16bits & 0xFF);
+            return 4;
         case 0x91: // SUB C
-            // TODO: implémentation
-            break;
+            res_16bits = cpu->a - cpu->c;
+            cpu->ac = (((cpu->a & 0x0F) - (cpu->c & 0x0F)) > 0x0F);
+            check_condition_bits(cpu, 1, 1, 1, 1, res_16bits);
+            cpu->a = (uint8_t)(res_16bits & 0xFF);
+            return 4;
         case 0x92: // SUB D
-            // TODO: implémentation
-            break;
+            res_16bits = cpu->a - cpu->d;
+            cpu->ac = (((cpu->a & 0x0F) - (cpu->d & 0x0F)) > 0x0F);
+            check_condition_bits(cpu, 1, 1, 1, 1, res_16bits);
+            cpu->a = (uint8_t)(res_16bits & 0xFF);
+            return 4;
         case 0x93: // SUB E
-            // TODO: implémentation
-            break;
+            res_16bits = cpu->a - cpu->e;
+            cpu->ac = (((cpu->a & 0x0F) - (cpu->e & 0x0F)) > 0x0F);
+            check_condition_bits(cpu, 1, 1, 1, 1, res_16bits);
+            cpu->a = (uint8_t)(res_16bits & 0xFF);
+            return 4;
         case 0x94: // SUB H
-            // TODO: implémentation
-            break;
+            res_16bits = cpu->a - cpu->h;
+            cpu->ac = (((cpu->a & 0x0F) - (cpu->h & 0x0F)) > 0x0F);
+            check_condition_bits(cpu, 1, 1, 1, 1, res_16bits);
+            cpu->a = (uint8_t)(res_16bits & 0xFF);
+            return 4;
         case 0x95: // SUB L
-            // TODO: implémentation
-            break;
+            res_16bits = cpu->a - cpu->l;
+            cpu->ac = (((cpu->a & 0x0F) - (cpu->l & 0x0F)) > 0x0F);
+            check_condition_bits(cpu, 1, 1, 1, 1, res_16bits);
+            cpu->a = (uint8_t)(res_16bits & 0xFF);
+            return 4;
         case 0x96: // SUB M
-            // TODO: implémentation
-            break;
+            lo = read_memory(cpu, ((cpu->h << 8) | cpu->l));
+            res_16bits = cpu->a - lo;
+            cpu->ac = (((cpu->a & 0x0F) - (lo & 0x0F)) > 0x0F);
+            check_condition_bits(cpu, 1, 1, 1, 1, res_16bits);
+            cpu->a = (uint8_t)(res_16bits & 0xFF);
+            return 7;
         case 0x97: // SUB A
-            // TODO: implémentation
-            break;
+            res_16bits = cpu->a - cpu->a;
+            cpu->ac = (((cpu->a & 0x0F) - (cpu->a & 0x0F)) > 0x0F);
+            check_condition_bits(cpu, 1, 1, 1, 1, res_16bits);
+            cpu->a = (uint8_t)(res_16bits & 0xFF);
+            return 4;
         case 0x98: // SBB B
-            // TODO: implémentation
-            break;
+            res_16bits = cpu->a - (cpu->b + cpu->cy);
+            cpu->ac = (((cpu->a & 0x0F) - ((cpu->b & 0x0F) + cpu->cy)) > 0x0F);
+            check_condition_bits(cpu, 1, 1, 1, 1, res_16bits);
+            cpu->a = (uint8_t)(res_16bits & 0xFF);
+            return 4;
         case 0x99: // SBB C
-            // TODO: implémentation
-            break;
+            res_16bits = cpu->a - (cpu->c + cpu->cy);
+            cpu->ac = (((cpu->a & 0x0F) - ((cpu->c & 0x0F) + cpu->cy)) > 0x0F);
+            check_condition_bits(cpu, 1, 1, 1, 1, res_16bits);
+            cpu->a = (uint8_t)(res_16bits & 0xFF);
+            return 4;
         case 0x9A: // SBB D
-            // TODO: implémentation
-            break;
+            res_16bits = cpu->a - (cpu->d + cpu->cy);
+            cpu->ac = (((cpu->a & 0x0F) - ((cpu->d & 0x0F) + cpu->cy)) > 0x0F);
+            check_condition_bits(cpu, 1, 1, 1, 1, res_16bits);
+            cpu->a = (uint8_t)(res_16bits & 0xFF);
+            return 4;
         case 0x9B: // SBB E
-            // TODO: implémentation
-            break;
+            res_16bits = cpu->a - (cpu->e + cpu->cy);
+            cpu->ac = (((cpu->a & 0x0F) - ((cpu->e & 0x0F) + cpu->cy)) > 0x0F);
+            check_condition_bits(cpu, 1, 1, 1, 1, res_16bits);
+            cpu->a = (uint8_t)(res_16bits & 0xFF);
+            return 4;
         case 0x9C: // SBB H
-            // TODO: implémentation
-            break;
+            res_16bits = cpu->a - (cpu->h + cpu->cy);
+            cpu->ac = (((cpu->a & 0x0F) - ((cpu->h & 0x0F) + cpu->cy)) > 0x0F);
+            check_condition_bits(cpu, 1, 1, 1, 1, res_16bits);
+            cpu->a = (uint8_t)(res_16bits & 0xFF);
+            return 4;
         case 0x9D: // SBB L
-            // TODO: implémentation
-            break;
+            res_16bits = cpu->a - (cpu->l + cpu->cy);
+            cpu->ac = (((cpu->a & 0x0F) - ((cpu->l & 0x0F) + cpu->cy)) > 0x0F);
+            check_condition_bits(cpu, 1, 1, 1, 1, res_16bits);
+            cpu->a = (uint8_t)(res_16bits & 0xFF);
+            return 4;
         case 0x9E: // SBB M
-            // TODO: implémentation
-            break;
+            lo = read_memory(cpu, ((cpu->h << 8) | cpu->l));
+            res_16bits = cpu->a - (lo + cpu->cy);
+            cpu->ac = (((cpu->a & 0x0F) - ((lo & 0x0F) + cpu->cy)) > 0x0F);
+            check_condition_bits(cpu, 1, 1, 1, 1, res_16bits);
+            cpu->a = (uint8_t)(res_16bits & 0xFF);
+            return 7;
         case 0x9F: // SBB A
-            // TODO: implémentation
-            break;
+            res_16bits = cpu->a - (cpu->a + cpu->cy);
+            cpu->ac = (((cpu->a & 0x0F) - ((cpu->a & 0x0F) + cpu->cy)) > 0x0F);
+            check_condition_bits(cpu, 1, 1, 1, 1, res_16bits);
+            cpu->a = (uint8_t)(res_16bits & 0xFF);
+            return 4;
         case 0xA0: // ANA B
             // TODO: implémentation
             break;
