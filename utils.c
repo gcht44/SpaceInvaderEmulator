@@ -207,7 +207,7 @@ const char* opcode_name(uint8_t opcode)
         case 0xC8: return "RZ";
         case 0xC9: return "RET";
         case 0xCA: return "JZ a16";
-        case 0xCB: return "NOP";
+        case 0xCB: return "*JMP a16";
         case 0xCC: return "CZ a16";
         case 0xCD: return "CALL a16";
         case 0xCE: return "ACI d8";
@@ -221,11 +221,11 @@ const char* opcode_name(uint8_t opcode)
         case 0xD6: return "SUI d8";
         case 0xD7: return "RST 2";
         case 0xD8: return "RC";
-        case 0xD9: return "NOP";
+        case 0xD9: return "*RET";
         case 0xDA: return "JC a16";
         case 0xDB: return "IN d8";
         case 0xDC: return "CC a16";
-        case 0xDD: return "NOP";
+        case 0xDD: return "*CALL a16";
         case 0xDE: return "SBI d8";
         case 0xDF: return "RST 3";
         case 0xE0: return "RPO";
@@ -241,7 +241,7 @@ const char* opcode_name(uint8_t opcode)
         case 0xEA: return "JPE a16";
         case 0xEB: return "XCHG";
         case 0xEC: return "CPE a16";
-        case 0xED: return "NOP";
+        case 0xED: return "*CALL a16";
         case 0xEE: return "XRI d8";
         case 0xEF: return "RST 5";
         case 0xF0: return "RP";
@@ -257,7 +257,7 @@ const char* opcode_name(uint8_t opcode)
         case 0xFA: return "JM a16";
         case 0xFB: return "EI";
         case 0xFC: return "CM a16";
-        case 0xFD: return "NOP";
+        case 0xFD: return "*CALL a16";
         case 0xFE: return "CPI d8";
         case 0xFF: return "RST 7";
         default:   return "UNKNOWN";
