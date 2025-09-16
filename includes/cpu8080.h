@@ -24,11 +24,17 @@ typedef struct CPU
     bool s;
 
     char memory[0x2000];
+
+    bool halted;
 } CPU;
 
 void init_cpu(CPU *cpu);
 void check_condition_bits(CPU *cpu, bool z, bool c, bool p, bool s, uint16_t data);
 void print_opcode(CPU *cpu);
 int execute(CPU *cpu);
+
+void call(CPU *cpu, uint16_t addr);
+void rst(CPU *cpu, uint8_t i);
+void ret(CPU *cpu);
 
 #endif
