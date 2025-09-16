@@ -6,5 +6,6 @@
 // typedef struct CPU CPU;
 
 void write_io(uint8_t port, uint8_t value);
+uint8_t read_io(uint8_t port);
 
 #endif
