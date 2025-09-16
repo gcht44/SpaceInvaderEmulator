@@ -4,9 +4,20 @@
 #include "includes/io.h"
 
 #include <stdio.h>
+#include <stdlib.h>
 
-void init_cpu(CPU *cpu)
+void init_cpu(CPU *cpu, EMU_RUN_TYPE type)
 {
+    if (type == CPUDIAGBIN)
+    {
+        cpu->pc = 0x0100;
+        cpu->sp = 0xf000;
+    }
+    else
+    {
+        cpu->pc = 0;
+        cpu->sp = 0xf000;
+    }
     cpu->a = 0;
     cpu->b = 0;
     cpu->c = 0;
@@ -14,9 +25,6 @@ void init_cpu(CPU *cpu)
     cpu->e = 0;
     cpu->h = 0;
     cpu->l = 0;
-
-    cpu->pc = 0;
-    cpu->sp = 0xf000;
 
     cpu->z = 0;
     cpu->c = 0;
@@ -58,7 +66,7 @@ uint8_t get_f_flags(CPU *cpu)
 void print_opcode(CPU *cpu)
 {
     uint8_t opcode = cpu->memory[cpu->pc];
-    printf("$%04X: %s (A:%02X B:%02X C:%02X D:%02X E:%02X H:%02X L:%02X Flags:%c%c%c%c%c)", 
+    printf("$%04X: %s (A:%02X B:%02X C:%02X D:%02X E:%02X H:%02X L:%02X Flags:%c%c%c%c%c)\n", 
         cpu->pc, opcode_name(opcode), cpu->a, cpu->b, cpu->c, cpu->d, cpu->e,
         cpu->h, cpu->l, (cpu->s == 0) ? '-' : 'S', (cpu->z == 0) ? '-' : 'Z', (cpu->ac == 0) ? '-' : 'A', 
         (cpu->p == 0) ? '-' : 'P', (cpu->cy == 0) ? '-' : 'c');
@@ -68,7 +76,6 @@ int execute(CPU *cpu)
 {
     print_opcode(cpu);
     uint8_t opcode = read_memory(cpu, cpu->pc++);
-
     uint8_t hi;
     uint8_t lo;
     uint16_t res_16bits;
@@ -1397,6 +1404,24 @@ void call(CPU *cpu, uint16_t addr)
 {
     write_memory(cpu, --cpu->sp, ((cpu->pc >> 8) & 0xFF));
     write_memory(cpu, --cpu->sp, (cpu->pc & 0xFF));
+
+    // For cpu.diag  a supr
+    if (addr == 0x0005)
+    {
+        if (cpu->c == 2)
+            printf("%c", cpu->e);
+        if (cpu->c == 9)
+        {
+            uint16_t addr_pointer = ((cpu->d << 8) | cpu->e);
+            uint16_t i = 0;
+            while (read_memory(cpu, addr_pointer+i) != '$')
+            {
+                printf("%c", read_memory(cpu, addr_pointer+i));
+                i++;
+            }
+        }
+        ret(cpu);
+    }
     cpu->pc = addr;
 }
 

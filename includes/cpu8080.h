@@ -23,13 +23,19 @@ typedef struct CPU
     bool p;
     bool s;
 
-    char memory[0x2000];
+    uint8_t memory[0x2000];
 
     bool halted;
     bool interrupt_enable;
 } CPU;
 
-void init_cpu(CPU *cpu);
+typedef enum EMU_RUN_TYPE
+{
+    DEFAULT,
+    CPUDIAGBIN,
+} EMU_RUN_TYPE;
+
+void init_cpu(CPU *cpu, EMU_RUN_TYPE type);
 void check_condition_bits(CPU *cpu, bool z, bool c, bool p, bool s, uint16_t data);
 void print_opcode(CPU *cpu);
 int execute(CPU *cpu);
