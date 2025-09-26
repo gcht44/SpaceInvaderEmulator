@@ -79,7 +79,7 @@ void draw_pixels(const uint32_t* framebuffer)
     }
 
     // Met à jour toute la texture depuis le framebuffer (copie interne SDL)
-    int pitch = W * 4; // octets par ligne dans framebuffer
+    int pitch = W * 4; // octets par ligne dans framebuffer car 32bits = 4octets donc 1 pixel vaut 4 octets
     if (SDL_UpdateTexture(ptex, NULL, framebuffer, pitch)) {
         // Succès en SDL3: renvoie true
         SDL_SetRenderDrawColor(ren, 0, 0, 0, 255);
