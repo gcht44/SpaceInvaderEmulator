@@ -3,9 +3,9 @@
 
 #include <stdint.h>
 
-// typedef struct CPU CPU;
+typedef struct CPU CPU;
 
-void write_io(uint8_t port, uint8_t value);
+void write_io(CPU cpu, uint8_t port, uint8_t value);
 uint8_t read_io(uint8_t port);
 
 #endif
