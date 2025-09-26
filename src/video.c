@@ -54,7 +54,7 @@ int init_sdl()
     return 0;
 }
 
-void SDL_Quit()
+void SDL_exit()
 {
     SDL_DestroyRenderer(ren);
     SDL_DestroyWindow(win);
@@ -66,7 +66,7 @@ void SDL_Quit()
 // framebuffer est un tableau W*H en ARGB8888 (uint32_t par pixel)
 void draw_pixels(const uint32_t* framebuffer)
 {
-    // Créer la texture une fois si besoin (STATIC suffit si on utilise UpdateTexture)
+    // Créer la texture une fois si besoin
     if (!ptex) {
         ptex = SDL_CreateTexture(ren,
                                   SDL_PIXELFORMAT_ARGB8888,

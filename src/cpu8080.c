@@ -42,7 +42,6 @@ void init_cpu(CPU *cpu)
     cpu->interrupt_enable = false;
     cpu->interrupt_pending = false;
     cpu->ei_pending = false;
-    cpu->post_rst10_render_pending = false;
 }
 
 void fill_frame_buffer(CPU *cpu, uint32_t *frameBuffer) 
