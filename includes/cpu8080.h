@@ -29,8 +29,7 @@ typedef struct CPU
     bool interrupt_enable; // Interrupt OK si true et interrupt_pending true
     bool interrupt_pending; // Un périphérique demande une interrupt
     bool ei_pending; // Dans ei pour signifier qu'après on pourra executer une interrupt
-    uint8_t interrupt_vector; // Variable contenant l'opcode que l'on veut executer pendant L'interrupt souvetn RST
-    bool post_rst10_render_pending; 
+    uint8_t interrupt_vector; // Variable contenant l'opcode que l'on veut executer pendant L'interrupt souvetn RST 
 } CPU;
 
 int get_cyc();
