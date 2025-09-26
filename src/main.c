@@ -91,14 +91,20 @@ void print_opcode(CPU *cpu, int cyc)
         read_memory(cpu, cpu->pc+3));
 }
 
-int main(void)
+int main(int ac, char **av)
 {
+    if (ac != 2)
+    {
+        printf("ERR: You need to specify the rom ex: ./bin/emu rom/invaders.rom\n");
+        return 0;
+    }
+
     CPU cpu;
     bool play_emu = true;
 
     init_cpu(&cpu);
     printf("Le CPU a bien été initialisé\n");
-    load_rom(&cpu, "rom/invaders.rom");
+    load_rom(&cpu, av[1]);
     printf("La ROM a bien été chargé\n");
 
     /*int i = 0;
