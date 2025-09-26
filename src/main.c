@@ -30,6 +30,15 @@ void update_input_keyboard(SDL_Event* e)
                 case SDLK_T:
                     keyboard_to_io(TWO_P_START, 1);
                     break;
+                case SDLK_SPACE:
+                    keyboard_to_io(TWO_P_SHOOT, 1);
+                    break;
+                case SDLK_LEFT:
+                    keyboard_to_io(TWO_P_LEFT, 1);
+                    break;
+                case SDLK_RIGHT:
+                    keyboard_to_io(TWO_P_RIGHT, 1);
+                    break;
                 default:
                     break;
             }
@@ -55,6 +64,16 @@ void update_input_keyboard(SDL_Event* e)
                     break;
                 case SDLK_T:
                     keyboard_to_io(TWO_P_START, 0);
+                    break;
+
+                case SDLK_SPACE:
+                    keyboard_to_io(TWO_P_SHOOT, 0);
+                    break;
+                case SDLK_LEFT:
+                    keyboard_to_io(TWO_P_LEFT, 0);
+                    break;
+                case SDLK_RIGHT:
+                    keyboard_to_io(TWO_P_RIGHT, 0);
                     break;
                 default:
                     break;
